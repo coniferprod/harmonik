@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use structopt::StructOpt;
 use ksynth::k5000::harmonic::{Levels, Envelope};
 
 const MAX_LEVEL: u8 = 127;
@@ -65,6 +66,7 @@ fn get_triangle_levels() -> [u8; HARMONIC_COUNT] {
     levels
 }
 
+#[derive(Debug)]
 struct Parameters {
     a: f64,
     b: f64,
@@ -117,12 +119,55 @@ fn get_custom_levels(params: &Parameters) -> [u8; HARMONIC_COUNT] {
     levels
 }
 
-fn main() {
-    println!("sine: {:?}", get_sine_levels());
-    println!("saw: {:?}", get_saw_levels());
-    println!("square: {:?}", get_square_levels());
-    println!("triangle: {:?}", get_triangle_levels());
+#[derive(Debug, StructOpt)]
+struct Cli {
+    #[structopt(short, long)]
+    waveform: String,
 
+    #[structopt(name = "params", required_if("waveform", "custom"))]
+    params: Option<String>,
+}
+
+fn main() {
+    let cli = Cli::from_args();
+    println!("{:?}", cli);
+
+    match cli.waveform.as_str() {
+        "custom" => {
+            // structopt makes sure we have the parameters
+            if let Some(values) = cli.params {
+                let numbers: Vec<f64> = values.split(",").map(|s| s.parse::<f64>().unwrap()).collect();
+                eprintln!("numbers = {:?}", numbers);
+                let params = Parameters {
+                    a: numbers[0],
+                    b: numbers[1],
+                    c: numbers[2],
+                    xp: numbers[3],
+                    d: numbers[4],
+                    e: numbers[5],
+                    yp: numbers[6],
+                };
+                eprintln!("params = {:?}", params);
+                println!("custom: {:?}", get_custom_levels(&params));
+            };
+        },
+        "sine" => {
+            println!("sine: {:?}", get_sine_levels());
+        },
+        "saw" => {
+            println!("saw: {:?}", get_saw_levels());
+        },
+        "square" => {
+            println!("square: {:?}", get_square_levels());
+        },
+        "triangle" => {
+            println!("triangle: {:?}", get_triangle_levels());
+        }
+        _ => {
+        }
+    }
+
+    /*
     let mut custom_params = HashMap::<&str, Parameters>::new();
     custom_params.insert("saw", Parameters { a: 1.0, b: 0.0, c: 0.0, xp: 0.0, d: 0.0, e: 0.0, yp: 0.0 });
     custom_params.insert("square", Parameters { a: 1.0, b: 1.0, c: 0.0, xp: 0.5, d: 0.0, e: 0.0, yp: 0.0 });
@@ -132,4 +177,5 @@ fn main() {
     for (k, v) in custom_params.into_iter() {
         println!("custom / {}: {:?}", k, get_custom_levels(&v));
     }
+    */
 }
