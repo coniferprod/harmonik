@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 use structopt::StructOpt;
 use ksynth::k5000::harmonic::{Levels, Envelope};
+use syxpack::{Message, Manufacturer, ManufacturerId};
 
 const MAX_LEVEL: u8 = 127;
 const HARMONIC_COUNT: usize = 64;
@@ -230,34 +231,35 @@ fn make_vertical_graph(levels: &[u8]) -> String {
     result
 }
 
-fn make_harmonic_sysex(harmonic_num: u32, channel: u8, level: u8, group_num: u32, source_num: u32) -> Vec<u8> {
-    let mut result = Vec::<u8>::new();
-
-    result.push(0x40); // Kawai manufacturer ID
-    result.push(channel); // MIDI channel (0...15)
-    result.push(0x10);  // function number
-    result.push(0x00);  // synth group
-    result.push(0x0a);  // machine number
-    result.push(0x02);  // "Single Tone ADD Wave Parameter"
-
-    let hc = 0x40 + group_num;
-    result.push(hc as u8);
-
-    result.push(source_num as u8); // 00h ... 05h
-    result.push(harmonic_num as u8);  // harmonic number
-    result.push(0);
-    result.push(0);
-
-    result.push(level);
-
-    result
+fn make_harmonic_sysex(harmonic_num: u32, channel: u8, level: u8, group_num: u32, source_num: u32) -> Message {
+    Message::new(
+        Manufacturer::from_id(ManufacturerId::Standard(0x40)),
+        vec![
+            channel,  // MIDI channel 0...15
+            0x10, // function number
+            0x00, // synth group
+            0x0a, // machine number
+            0x02, // "Single Tone ADD Wave Parameter"
+            0x40 + group_num as u8,
+            source_num as u8,  // 00h ... 05h
+            harmonic_num as u8, // harmonic number 0...63
+            0,
+            0,
+            level,
+        ]
+    )
 }
 
 fn make_sysex_messages(device: &str, levels: &[u8], channel: u8, group_num: u32, source_num: u32) {
     for i in 0..HARMONIC_COUNT {
-        let sysex = make_harmonic_sysex(i as u32, channel, levels[i], group_num, source_num);
+        let message = make_harmonic_sysex(i as u32, channel, levels[i], group_num, source_num);
         print!("sendmidi dev \"{}\" hex syx ", device);
-        for b in sysex {
+        let mut bytes = message.to_bytes();
+        let original_len = bytes.len();
+        bytes.remove(0);  // remove first element (the SysEx initiator)
+        bytes.remove(bytes.len() - 1); // remove last element (the SysEx terminator)
+        assert!(bytes.len() == original_len - 2);
+        for b in bytes {
             print!("{:02x} ", b);
         }
         println!("");
