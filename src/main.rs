@@ -157,20 +157,30 @@ fn main() {
                     yp: numbers[6],
                 };
                 eprintln!("params = {:?}", params);
-                make_sysex_messages(&device, &get_custom_levels(&params), channel, 0, 0);
+                let levels = get_custom_levels(&params);
+                make_sysex_messages(&device, &levels, channel, 0, 0);
+                println!("{}", make_graph(&levels));
             };
         },
         "sine" => {
-            make_sysex_messages(&device, &get_sine_levels(), channel, 0, 0);
+            let levels = get_sine_levels();
+            make_sysex_messages(&device, &levels, channel, 0, 0);
+            println!("{}", make_graph(&levels));
         },
         "saw" => {
-            make_sysex_messages(&device, &get_saw_levels(), channel, 0, 0);
+            let levels = get_saw_levels();
+            make_sysex_messages(&device, &levels, channel, 0, 0);
+            println!("{}", make_graph(&levels));
         },
         "square" => {
-            make_sysex_messages(&device, &get_square_levels(), channel, 0, 0);
+            let levels = get_square_levels();
+            make_sysex_messages(&device, &levels, channel, 0, 0);
+            println!("{}", make_graph(&levels));
         },
         "triangle" => {
-            make_sysex_messages(&device, &get_triangle_levels(), channel, 0, 0);
+            let levels = get_triangle_levels();
+            make_sysex_messages(&device, &levels, channel, 0, 0);
+            println!("{}", make_graph(&levels));
         }
         _ => {
             eprintln!("Unknown waveform");
@@ -188,6 +198,36 @@ fn main() {
         println!("custom / {}: {:?}", k, get_custom_levels(&v));
     }
     */
+}
+
+// Makes a graph of the harmonic levels as a string to print out.
+fn make_graph(levels: &[u8]) -> String {
+    make_vertical_graph(levels)
+}
+
+fn make_horizontal_graph(levels: &[u8]) -> String {
+    let mut result = String::new();
+
+
+    result
+}
+
+fn make_vertical_graph(levels: &[u8]) -> String {
+    let mut result = String::new();
+
+    let mut index = 1;
+    // First just make 64 lines that have a vertical bar that approximates the harmonic level.
+    for level in levels {
+        // Levels are 0...127; use that divided by 10 to get max 12 characters,
+        // then scale up to max line width of 80
+        let count = (*level as usize / 10) * 6;
+        result.push_str(&format!("{:2}: ", index));
+        result.push_str(&"*".repeat(count));
+        result.push('\n');
+        index += 1;
+    }
+
+    result
 }
 
 fn make_harmonic_sysex(harmonic_num: u32, channel: u8, level: u8, group_num: u32, source_num: u32) -> Vec<u8> {
