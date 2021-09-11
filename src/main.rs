@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fmt;
+
 use structopt::StructOpt;
+use rand::Rng;
 use ksynth::k5000::harmonic::{Levels, Envelope};
 use syxpack::{Message, Manufacturer, ManufacturerId};
 
@@ -121,6 +123,15 @@ fn get_custom_levels(params: &Parameters) -> [u8; HARMONIC_COUNT] {
     levels
 }
 
+fn get_random_levels() -> [u8; HARMONIC_COUNT] {
+    let mut rng = rand::thread_rng();
+    let mut levels = [0u8; HARMONIC_COUNT];
+    for i in 0..HARMONIC_COUNT {
+        levels[i] = rng.gen_range(0..128)
+    }
+    levels
+}
+
 #[derive(Debug, StructOpt)]
 struct Cli {
     #[structopt(short, long)]
@@ -138,7 +149,7 @@ struct Cli {
 
 fn main() {
     let cli = Cli::from_args();
-    println!("{:?}", cli);
+    //println!("{:?}", cli);
 
     let device = cli.device;
     let channel = cli.channel - 1;  // adjust channel to zero-based
@@ -159,29 +170,34 @@ fn main() {
                 };
                 eprintln!("params = {:?}", params);
                 let levels = get_custom_levels(&params);
-                make_sysex_messages(&device, &levels, channel, 0, 0);
                 println!("{}", make_graph(&levels));
+                make_sysex_messages(&device, &levels, channel, 0, 0);
             };
         },
         "sine" => {
             let levels = get_sine_levels();
-            make_sysex_messages(&device, &levels, channel, 0, 0);
             println!("{}", make_graph(&levels));
+            make_sysex_messages(&device, &levels, channel, 0, 0);
         },
         "saw" => {
             let levels = get_saw_levels();
-            make_sysex_messages(&device, &levels, channel, 0, 0);
             println!("{}", make_graph(&levels));
+            make_sysex_messages(&device, &levels, channel, 0, 0);
         },
         "square" => {
             let levels = get_square_levels();
-            make_sysex_messages(&device, &levels, channel, 0, 0);
             println!("{}", make_graph(&levels));
+            make_sysex_messages(&device, &levels, channel, 0, 0);
         },
         "triangle" => {
             let levels = get_triangle_levels();
-            make_sysex_messages(&device, &levels, channel, 0, 0);
             println!("{}", make_graph(&levels));
+            make_sysex_messages(&device, &levels, channel, 0, 0);
+        },
+        "random" => {
+            let levels = get_random_levels();
+            println!("{}", make_graph(&levels));
+            make_sysex_messages(&device, &levels, channel, 0, 0);
         }
         _ => {
             eprintln!("Unknown waveform");

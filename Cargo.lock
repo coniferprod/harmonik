@@ -85,9 +85,10 @@ dependencies = [
 
 [[package]]
 name = "harmonik"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ksynth",
+ "rand",
  "structopt",
  "syxpack",
 ]
@@ -112,9 +113,9 @@ dependencies = [
 
 [[package]]
 name = "ksynth"
-version = "0.8.2"
+version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9861f655ac72ff41375381661b854fd167a1632f9859356c88aa9b1bb44ad362"
+checksum = "7e5c2733955637e459b62369eefcd1ba87cdcba0d89f09e54d0bc9c7f767bf24"
 dependencies = [
  "bit",
  "lazy_static",
